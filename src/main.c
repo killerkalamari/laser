@@ -19,6 +19,7 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include "display.h"
+#include "file.h"
 #include "game.h"
 #include "kbd.h"
 
@@ -56,18 +57,32 @@ static void help1(void)
 
 static void play_game(void)
 {
-	int rc = game_init();
+	// Read puzzles
+	int rc = file_read_puzzles(game_get_puzzles());
 	if (rc) {
 		display_file_error(rc, "reading", PUZZLE_FILENAME);
 		kbd_error();
 		return;
 	}
+
+	// Read solved status
+	rc = file_read_solved(game_get_solved());
+
+	rc = game_init(rc);
+	if (rc) {
+		display_file_error(rc, "reading", SOLVED_FILENAME);
+		kbd_error();
+		return;
+	}
 	while (1) {
-		rc = game_laser();
-		if (rc) {
-			display_file_error(rc, "writing", COMPLETION_FILENAME);
-			kbd_error();
-			return;
+		if (game_laser()) {
+			int rc = file_write_solved(game_get_solved());
+			if (rc) {
+				display_file_error(rc, "writing",
+							SOLVED_FILENAME);
+				kbd_error();
+				return;
+			}
 		}
 		display_game();
 		switch(kbd_game()) {

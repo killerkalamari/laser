@@ -84,11 +84,13 @@ typedef struct {
 	loc_t exit;
 } path_t;
 
-int game_init(void);
+int game_init(int init_solved);
 int game_is_cursor(int row, int col);
 int game_is_selection(int row, int col);
 int game_is_solved(void);
 int game_is_total_winner(void);
+char *game_get_puzzles(void);
+char *game_get_solved(void);
 int game_get_puzzle_id(void);
 token_t *game_get_token(int row, int col);
 int game_get_path_count(void);

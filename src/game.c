@@ -137,16 +137,9 @@ static int find_unsolved_puzzle(void)
 	return unsolved;
 }
 
-int game_init(void)
+int game_init(int init_solved)
 {
-	// Read puzzles
-	int rc = file_read_puzzles(puzzles);
-	if (rc)
-		return rc;
-
-	// Read completion status
-	rc = file_read_completion(is_complete);
-	if (rc)
+	if (init_solved)
 		for (int i = 0; i < PUZZLE_COUNT; ++i)
 			solved[i] = '0';
 
@@ -177,6 +170,16 @@ int game_is_solved(void)
 int game_is_total_winner(void)
 {
 	return is_winner;
+}
+
+char *game_get_puzzles(void)
+{
+	return puzzles;
+}
+
+char *game_get_solved(void)
+{
+	return solved;
 }
 
 int game_get_puzzle_id(void)
@@ -453,9 +456,7 @@ int game_laser(void)
 			tokens_hit >= tokens_req) {
 		solved[puzzle_i] = '1';
 		find_unsolved_puzzle();
-		int rc = file_write_completion(is_complete);
-		if (rc)
-			return rc;
+		return 1;
 	}
 
 	return 0;
