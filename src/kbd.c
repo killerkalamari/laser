@@ -22,9 +22,7 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 #include <gint/usb-ff-bulk.h>
 #include "kbd.h"
 
-#define KBD_OPTIONS (GETKEY_BACKLIGHT | GETKEY_MENU)
 #define KEY_REDRAW -1
-#define KEY_CAPTURE -2
 
 extern int display_debug;
 extern unsigned int light;
@@ -36,7 +34,19 @@ void kbd_init(void)
 	usb_open(interfaces, GINT_CALL_NULL);
 }
 
-static void power_off(void)
+/*
+How to take an in-game screenshot:
+1. Run: fxlink -iw
+2. Connect the calculator via USB then press EXIT (don't press F1 - F3)
+3. Press "7" in the game
+*/
+static void take_screenshot(void)
+{
+	if (usb_is_open())
+		usb_fxlink_screenshot_gray(1);
+}
+
+static void Power_Off(void)
 {
 	asm volatile(
 		"\n	mov	#1,r4"
@@ -53,28 +63,24 @@ static void power_off(void)
 	);
 }
 
-/*
-How to take an in-game screenshot:
-1. Run: fxlink -iw
-2. Connect the calculator via USB then press EXIT (don't press F1 - F3)
-3. Press "7" in the game
-*/
+static void power_off(void)
+{
+	gint_world_switch((gint_call_t) {
+		.function = (void *)Power_Off,
+		.args = {}
+	});
+}
+
 unsigned int kbd_getkey(void)
 {
-	key_event_t event = getkey_opt(KBD_OPTIONS, NULL);
+	key_event_t event = getkey_opt(GETKEY_BACKLIGHT, NULL);
 	uint key = event.key;
 	switch (key) {
 	case KEY_7:
-		// Take screenshot
-		if (usb_is_open())
-			usb_fxlink_screenshot_gray(1);
-		return KEY_CAPTURE;
+		take_screenshot();
+		return KEY_7;
 	case KEY_ACON:
-		// Power off
-		gint_world_switch((gint_call_t) {
-			.function = (void *)power_off,
-			.args = {}
-		});
+		power_off();
 		return KEY_REDRAW;
 	case KEY_COMMA:
 		display_debug = 1 - display_debug;
