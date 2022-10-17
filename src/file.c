@@ -85,12 +85,12 @@ int file_read_puzzles(char *buf)
 	return _rc;
 }
 
-int file_read_completion(char *buf)
+int file_read_solved(char *buf)
 {
 	gint_world_switch((gint_call_t) {
 		.function = (void *)read_file,
 		.args = {
-			GINT_CALL_ARG(FLASH COMPLETION_FILENAME),
+			GINT_CALL_ARG(FLASH SOLVED_FILENAME),
 			GINT_CALL_ARG(buf),
 			GINT_CALL_ARG(PUZZLE_COUNT)
 		}
@@ -98,12 +98,12 @@ int file_read_completion(char *buf)
 	return _rc;
 }
 
-int file_write_completion(char *buf)
+int file_write_solved(char *buf)
 {
 	gint_world_switch((gint_call_t) {
 		.function = (void *)write_file,
 		.args = {
-			GINT_CALL_ARG(FLASH COMPLETION_FILENAME),
+			GINT_CALL_ARG(FLASH SOLVED_FILENAME),
 			GINT_CALL_ARG(buf),
 			GINT_CALL_ARG(PUZZLE_COUNT)
 		}

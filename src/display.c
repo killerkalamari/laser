@@ -32,13 +32,13 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 extern bopti_image_t img_background;
 extern bopti_image_t img_can_move;
 extern bopti_image_t img_can_rotate;
-extern bopti_image_t img_complete;
 extern bopti_image_t img_cursor;
 extern bopti_image_t img_hit_n;
 extern bopti_image_t img_hit_e;
 extern bopti_image_t img_hit_s;
 extern bopti_image_t img_hit_w;
 extern bopti_image_t img_selection;
+extern bopti_image_t img_solved;
 extern bopti_image_t img_target_hit;
 extern bopti_image_t img_target_missed;
 extern bopti_image_t img_token_block;
@@ -379,15 +379,15 @@ void display_game()
 		}
 	}
 
-	// Draw puzzle ID and completion status
+	// Draw puzzle ID, target completion, and solve/win status
 	dprint(114, 1, C_BLACK, "%i", game_get_puzzle_id());
-	if (game_is_complete())
-		dimage(101, 1, &img_complete);
 	for (int i = 0; i < get_targets_req(); ++i) {
 		bopti_image_t *img = i < get_targets_hit() ? &img_target_hit :
 							&img_target_missed;
 		dimage(8 * i + 100, 9, img);
 	}
+	if (game_is_solved())
+		dimage(101, 1, &img_solved);
 	if (game_is_total_winner())
 		dprint(98, 29, C_LIGHT, "YOU WIN!");
 

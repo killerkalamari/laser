@@ -21,5 +21,5 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 int file_read_puzzles(char *buf);
-int file_read_completion(char *buf);
-int file_write_completion(char *buf);
+int file_read_solved(char *buf);
+int file_write_solved(char *buf);

@@ -36,13 +36,13 @@ images :=			\
 	background.png		\
 	can_move.png		\
 	can_rotate.png		\
-	complete.png		\
 	cursor.png		\
 	hit_n.png		\
 	hit_e.png		\
 	hit_s.png		\
 	hit_w.png		\
 	selection.png		\
+	solved.png		\
 	target_hit.png		\
 	target_missed.png	\
 	token_block.png		\

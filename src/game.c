@@ -34,7 +34,7 @@ typedef struct {
 static char puzzles[PUZZLE_BYTES];
 static int puzzle_i;
 static puzzle_t puzzle;
-static char is_complete[PUZZLE_COUNT];
+static char solved[PUZZLE_COUNT];
 static int is_winner;
 
 static int cursor_row;
@@ -124,7 +124,7 @@ static int find_unsolved_puzzle(void)
 {
 	int unsolved = -1;
 	for (int i = 0; i < PUZZLE_COUNT; ++i)
-		if (is_complete[i] != '1') {
+		if (solved[i] != '1') {
 			unsolved = i;
 			break;
 		}
@@ -148,7 +148,7 @@ int game_init(void)
 	rc = file_read_completion(is_complete);
 	if (rc)
 		for (int i = 0; i < PUZZLE_COUNT; ++i)
-			is_complete[i] = '0';
+			solved[i] = '0';
 
 	// Find first unsolved puzzle
 	puzzle_i = find_unsolved_puzzle();
@@ -169,9 +169,9 @@ int game_is_selection(int row, int col)
 	return (GRID_WIDTH * row + col) == selection;
 }
 
-int game_is_complete(void)
+int game_is_solved(void)
 {
-	return is_complete[puzzle_i] == '1';
+	return solved[puzzle_i] == '1';
 }
 
 int game_is_total_winner(void)
@@ -447,12 +447,11 @@ int game_laser(void)
 		add_path(cell, entry, exit);
 	}
 
-	// Determine completion status
+	// Determine whether puzzle has been solved
 	puzzle.targets_hit = req_hit + extra_hit;
-	if (!game_is_complete() &&
-			puzzle.targets_hit >= puzzle.targets_req &&
+	if (!game_is_solved() && puzzle.targets_hit >= puzzle.targets_req &&
 			tokens_hit >= tokens_req) {
-		is_complete[puzzle_i] = '1';
+		solved[puzzle_i] = '1';
 		find_unsolved_puzzle();
 		int rc = file_write_completion(is_complete);
 		if (rc)

@@ -41,7 +41,7 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 #define PUZZLE_COUNT 60 /* Must be even */
 #define PUZZLE_BYTES (PUZZLE_COUNT * BYTES_PER_PUZZLE)
 #define PUZZLE_FILENAME "LASER.dat"
-#define COMPLETION_FILENAME "LASER.cfg"
+#define SOLVED_FILENAME "LASER.cfg"
 
 typedef enum __attribute__((__packed__)) {
 	DIR_NORTH,
@@ -87,7 +87,7 @@ typedef struct {
 int game_init(void);
 int game_is_cursor(int row, int col);
 int game_is_selection(int row, int col);
-int game_is_complete(void);
+int game_is_solved(void);
 int game_is_total_winner(void);
 int game_get_puzzle_id(void);
 token_t *game_get_token(int row, int col);
