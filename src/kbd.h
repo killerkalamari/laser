@@ -22,6 +22,7 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 
 typedef enum __attribute__((__packed__)) {
 	COMMAND_REDRAW,
+	COMMAND_OSMENU,
 	COMMAND_CURSOR_UP,
 	COMMAND_CURSOR_DOWN,
 	COMMAND_CURSOR_LEFT,

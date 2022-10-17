@@ -37,6 +37,7 @@ extern bopti_image_t img_hit_n;
 extern bopti_image_t img_hit_e;
 extern bopti_image_t img_hit_s;
 extern bopti_image_t img_hit_w;
+extern bopti_image_t img_logo;
 extern bopti_image_t img_selection;
 extern bopti_image_t img_solved;
 extern bopti_image_t img_target_hit;
@@ -77,9 +78,15 @@ void display_init(void)
 		light = 1742;
 		dark = 927;
 	}
+}
+
+void display_gray_off(void)
+{
+	dgray(DGRAY_OFF);
+	dfont(&font_laser);
 	dclear(C_WHITE);
-	dprint(0, 28, C_BLACK, "Press any key...");
-	dupdate();
+	dimage(24, 13, &img_logo);
+	dprint(20, 45, C_BLACK, "PRESS ANY KEY TO CONTINUE");
 }
 
 static void init_gray(void)

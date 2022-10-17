@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <gint/gint.h>
 #include "display.h"
 #include "file.h"
 #include "game.h"
@@ -74,6 +75,8 @@ static void play_game(void)
 		kbd_error();
 		return;
 	}
+
+	display_gray_off();
 	while (1) {
 		if (game_laser()) {
 			int rc = file_write_solved(game_get_solved());
@@ -83,9 +86,17 @@ static void play_game(void)
 				kbd_error();
 				return;
 			}
+			display_gray_off();
 		}
+
 		display_game();
+
 		switch(kbd_game()) {
+		case COMMAND_OSMENU:
+			// Main menu
+			display_gray_off();
+			gint_osmenu();
+			break;
 		case COMMAND_CURSOR_UP:
 			game_cursor_row(-1);
 			break;
@@ -127,8 +138,8 @@ static void play_game(void)
 
 int main(void)
 {
-	display_init();
 	kbd_init();
+	display_init();
 	play_game();
 	return 1;
 }

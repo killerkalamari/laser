@@ -122,6 +122,8 @@ command_t kbd_game(void)
 		switch (kbd_getkey()) {
 		case KEY_REDRAW:
 			return COMMAND_REDRAW;
+		case KEY_MENU:
+			return COMMAND_OSMENU;
 		case KEY_UP:
 			return COMMAND_CURSOR_UP;
 		case KEY_DOWN:

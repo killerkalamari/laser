@@ -21,6 +21,7 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 #pragma once
 
 void display_init(void);
+void display_gray_off(void);
 void display_game(void);
 void display_help1(void);
 void display_help2(void);

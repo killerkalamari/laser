@@ -41,6 +41,7 @@ images :=			\
 	hit_e.png		\
 	hit_s.png		\
 	hit_w.png		\
+	logo.png		\
 	selection.png		\
 	solved.png		\
 	target_hit.png		\
