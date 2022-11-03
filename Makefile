@@ -17,7 +17,7 @@
 # along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 
 name := Laser
-version := 1.1
+version := 1.2
 
 headers :=			\
  	src/display.h		\
