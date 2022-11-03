@@ -37,7 +37,6 @@ typedef enum __attribute__((__packed__)) {
 } command_t;
 
 void kbd_init(void);
-unsigned int kbd_getkey(void);
 command_t kbd_game(void);
 command_t kbd_help(void);
 void kbd_error(void);

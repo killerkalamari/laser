@@ -18,8 +18,10 @@ You should have received a copy of the GNU General Public License
 along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <gint/hardware.h>
 #include <gint/keyboard.h>
 #include <gint/usb-ff-bulk.h>
+#include <gint/drivers/t6k11.h>
 #include "kbd.h"
 
 #define KEY_REDRAW -1
@@ -71,20 +73,24 @@ static void power_off(void)
 	});
 }
 
-unsigned int kbd_getkey(void)
+static unsigned int kbd_getkey(void)
 {
 	key_event_t event = getkey_opt(GETKEY_BACKLIGHT, NULL);
 	uint key = event.key;
 	switch (key) {
 	case KEY_7:
 		take_screenshot();
-		return KEY_7;
+		break;
 	case KEY_ACON:
 		power_off();
 		return KEY_REDRAW;
 	case KEY_COMMA:
 		display_debug = 1 - display_debug;
 		return KEY_REDRAW;
+	case KEY_OPTN:
+		if (!isSlim())
+			t6k11_backlight(-1);
+		break;
 	}
 	if (display_debug)
 		switch (key) {
@@ -172,5 +178,5 @@ command_t kbd_help(void)
 
 void kbd_error(void)
 {
-	getkey_opt(GETKEY_BACKLIGHT, NULL);
+	kbd_getkey();
 }
