@@ -1,5 +1,7 @@
-build/
+build_fx/
+build_fxg3a/
 old/
 data/
 .vscode/
+vscode_preinclude.h
 *.gif

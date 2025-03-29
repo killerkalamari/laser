@@ -1,6 +1,6 @@
 /*
 Laser Logic
-Copyright (C) 2022  Jeffry Johnston
+Copyright (C) 2022, 2025  Jeffry Johnston
 
 This file is part of Laser Logic.
 
@@ -20,9 +20,13 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <stdbool.h>
+
 void display_init(void);
-void display_gray_off(void);
+void display_init_mono(const bool clear);
+void display_menu_return(void);
 void display_game(void);
 void display_help1(void);
 void display_help2(void);
 void display_file_error(int rc, const char *op, const char *filename);
+bool display_is_using_gray_engine(void);

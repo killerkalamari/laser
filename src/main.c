@@ -1,6 +1,6 @@
 /*
 Laser Logic
-Copyright (C) 2022  Jeffry Johnston
+Copyright (C) 2022, 2025  Jeffry Johnston
 
 This file is part of Laser Logic.
 
@@ -19,6 +19,7 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 #include <gint/gint.h>
+#include <gint/hardware.h>
 #include "display.h"
 #include "file.h"
 #include "game.h"
@@ -76,7 +77,7 @@ static void play_game(void)
 		return;
 	}
 
-	display_gray_off();
+	display_init_mono(true);
 	while (1) {
 		if (game_laser()) {
 			int rc = file_write_solved(game_get_solved());
@@ -86,16 +87,15 @@ static void play_game(void)
 				kbd_error();
 				return;
 			}
-			display_gray_off();
+			display_init_mono(true);;
 		}
 
 		display_game();
 
 		switch(kbd_game()) {
 		case COMMAND_OSMENU:
-			// Main menu
-			display_gray_off();
-			gint_osmenu();
+			if (gint[HWCALC] == HWCALC_FXCG100)
+				return;
 			break;
 		case COMMAND_CURSOR_UP:
 			game_cursor_row(-1);
@@ -141,5 +141,5 @@ int main(void)
 	kbd_init();
 	display_init();
 	play_game();
-	return 1;
+	return 0;
 }

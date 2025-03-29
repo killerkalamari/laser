@@ -1,6 +1,6 @@
 /*
 Laser Logic
-Copyright (C) 2022  Jeffry Johnston
+Copyright (C) 2022, 2025  Jeffry Johnston
 
 This file is part of Laser Logic.
 
@@ -24,57 +24,36 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 
 #define FLASH u"\\\\fls0\\"
 
-static int _rc;
-
-static void read_file(const uint16_t *path, char *buf, int size)
+static int read_file(const uint16_t *path, char *buf, const int size)
 {
-	int fd = BFile_Open(path, BFile_ReadOnly);
-	if (fd < 0) {
-		_rc = 10;
-		return;
-	}
-	int rc = BFile_Read(fd, buf, size, 0);
-	if (rc < 0) {
-		_rc = 11;
-		return;
-	}
-	rc = BFile_Close(fd);
-	if (rc < 0) {
-		_rc = 12;
-		return;
-	}
-	_rc = 0;
+	const int fd = BFile_Open(path, BFile_ReadOnly);
+	if (fd < 0)
+		return 10;
+	if (BFile_Read(fd, buf, size, 0) < 0)
+		return 11;
+	if (BFile_Close(fd) < 0)
+		return 12;
+	return 0;
 }
 
-static void write_file(const uint16_t *path, char *buf, int size)
+static int write_file(const uint16_t *path, const char *buf, int size)
 {
 	BFile_Remove(path);
-	int rc = BFile_Create(path, BFile_File, &size);
-	if (rc < 0) {
-		_rc = 20;
-		return;
-	}
+	if (BFile_Create(path, BFile_File, &size) < 0)
+		return 20;
 	int fd = BFile_Open(path, BFile_WriteOnly);
-	if (fd < 0) {
-		_rc = 21;
-		return;
-	}
-	rc = BFile_Write(fd, buf, size);
-	if (rc < 0) {
-		_rc = 22;
-		return;
-	}
-	rc = BFile_Close(fd);
-	if (rc < 0) {
-		_rc = 23;
-		return;
-	}
-	_rc = 0;
+	if (fd < 0)
+		return 21;
+	if (BFile_Write(fd, buf, size) < 0)
+		return 22;
+	if (BFile_Close(fd) < 0)
+		return 23;
+	return 0;
 }
 
 int file_read_puzzles(char *buf)
 {
-	gint_world_switch((gint_call_t) {
+	return gint_world_switch((gint_call_t) {
 		.function = (void *)read_file,
 		.args = {
 			GINT_CALL_ARG(FLASH PUZZLE_FILENAME),
@@ -82,12 +61,11 @@ int file_read_puzzles(char *buf)
 			GINT_CALL_ARG(PUZZLE_BYTES)
 		}
 	});
-	return _rc;
 }
 
 int file_read_solved(char *buf)
 {
-	gint_world_switch((gint_call_t) {
+	return gint_world_switch((gint_call_t) {
 		.function = (void *)read_file,
 		.args = {
 			GINT_CALL_ARG(FLASH SOLVED_FILENAME),
@@ -95,12 +73,11 @@ int file_read_solved(char *buf)
 			GINT_CALL_ARG(PUZZLE_COUNT)
 		}
 	});
-	return _rc;
 }
 
 int file_write_solved(char *buf)
 {
-	gint_world_switch((gint_call_t) {
+	return gint_world_switch((gint_call_t) {
 		.function = (void *)write_file,
 		.args = {
 			GINT_CALL_ARG(FLASH SOLVED_FILENAME),
@@ -108,5 +85,4 @@ int file_write_solved(char *buf)
 			GINT_CALL_ARG(PUZZLE_COUNT)
 		}
 	});
-	return _rc;
 }

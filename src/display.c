@@ -1,6 +1,6 @@
 /*
 Laser Logic
-Copyright (C) 2022  Jeffry Johnston
+Copyright (C) 2022, 2025  Jeffry Johnston
 
 This file is part of Laser Logic.
 
@@ -30,6 +30,7 @@ along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 #define CORNER_NW 3
 
 extern bopti_image_t img_background;
+extern bopti_image_t img_background_cg100;
 extern bopti_image_t img_can_move;
 extern bopti_image_t img_can_rotate;
 extern bopti_image_t img_cursor;
@@ -62,53 +63,101 @@ extern bopti_image_t img_token_target_req_e;
 extern bopti_image_t img_token_target_req_s;
 extern bopti_image_t img_token_target_req_w;
 extern bopti_image_t img_help1;
+extern bopti_image_t img_help1_cg100;
 extern bopti_image_t img_help2;
+extern bopti_image_t img_help2_cg100;
 extern font_t font_laser;
 
-int display_debug = 0;
-unsigned int light;
-unsigned int dark;
+bool display_is_gray;
+uint8_t debug_display = 0;
+#ifdef FX9860G_G3A
+uint8_t debug_r;
+uint8_t debug_g;
+uint8_t debug_b;
+#else
+uint16_t debug_light;
+uint16_t debug_dark;
+#endif
+
+#ifdef FX9860G_G3A
+static uint16_t rgb565(void)
+{
+	return ((debug_r << 11) | (debug_g << 5) | debug_b);
+}
+#endif
 
 void display_init(void)
 {
+#ifdef FX9860G_G3A
+	debug_r = 28;
+	debug_g = 0;
+	debug_b = 5;
+	dgray_setcolors(DGRAY_BLACK_DEFAULT, DGRAY_DARK_DEFAULT, rgb565(), DGRAY_WHITE_DEFAULT);
+#else
 	if (gint[HWCALC] == HWCALC_G35PE2) {
-		light = 1006;
-		dark = 834;
+		debug_light = 1006;
+		debug_dark = 834;
 	} else {
-		light = 1742;
-		dark = 927;
+		debug_light = 1742;
+		debug_dark = 927;
 	}
+#endif
 }
 
-void display_gray_off(void)
+void display_init_mono(const bool clear)
 {
 	dgray(DGRAY_OFF);
 	dfont(&font_laser);
-	dclear(C_WHITE);
+	if (clear)
+		dclear(C_WHITE);
+	display_is_gray = false;
+}
+
+static void display_init_gray(void)
+{
+#ifdef FX9860G_G3A
+	dgray_setcolors(DGRAY_BLACK_DEFAULT, DGRAY_DARK_DEFAULT, rgb565(), DGRAY_WHITE_DEFAULT);
+#else
+	if (gint[HWCALC] == HWCALC_G35PE2)
+		dgray_setdelays(debug_light, debug_light);
+	else
+		dgray_setdelays(debug_light, debug_dark);
+#endif
+	dfont(&font_laser);
+	dgray(DGRAY_ON);
+	display_is_gray = true;
+}
+
+void display_menu_return(void)
+{
+	display_init_mono(true);
 	dimage(24, 13, &img_logo);
 	dprint(20, 45, C_BLACK, "PRESS ANY KEY TO CONTINUE");
 }
 
-static void init_gray(void)
-{
-	if (gint[HWCALC] == HWCALC_G35PE2)
-		dgray_setdelays(light, light);
-	else
-		dgray_setdelays(light, dark);
-	dfont(&font_laser);
-	dgray(DGRAY_ON);
-}
-
 static void debug(void)
 {
-	if (!display_debug)
+	if (!debug_display)
 		return;
+
+#ifdef FX9860G_G3A
+	drect(95, 37, 127, 63, C_DARK);
+	dtext(96, 38, C_WHITE, "RGB565");
+	dtext(96, 52, C_WHITE, "R");
+	dtext(107, 52, C_WHITE, "G");
+	dtext(118, 52, C_WHITE, "B");
+	dprint(96, 44, C_WHITE, "%04X", rgb565());
+	dprint(96, 58, C_WHITE, "%u", debug_r);
+	dprint(107, 58, C_WHITE, "%u", debug_g);
+	dprint(118, 58, C_WHITE, "%u", debug_b);
+#else
 	drect(0, 18, 31, 24, C_WHITE);
 	drect(95, 18, 127, 24, C_WHITE);
-	dprint(1, 19, C_BLACK, "%u", light);
-	dprint(96, 19, C_BLACK, "%u", dark);
+	dprint(1, 19, C_BLACK, "%u", debug_light);
+	dprint(96, 19, C_BLACK, "%u", debug_light);
 	drect(0, 25, 31, 46, C_LIGHT);
 	drect(95, 25, 127, 46, C_DARK);
+#endif
 }
 
 static void draw_loc(loc_t loc, int x, int y)
@@ -231,10 +280,10 @@ static void draw_laser(void)
 void display_game()
 {
 	// Prepare gray engine
-	init_gray();
+	display_init_gray();
 
 	// Draw background image
-	dimage(0, 0, &img_background);
+	dimage(0, 0, (gint[HWCALC] == HWCALC_FXCG100) ? &img_background_cg100 : &img_background);
 
 	// Draw each token
 	for (int row = 0; row < GRID_HEIGHT; ++row) {
@@ -408,15 +457,15 @@ void display_game()
 
 void display_help1()
 {
-	init_gray();
-	dimage(0, 0, &img_help1);
+	display_init_gray();
+	dimage(0, 0, (gint[HWCALC] == HWCALC_FXCG100) ? &img_help1_cg100 : &img_help1);
 	debug();
 	dupdate();
 }
 
 void display_help2()
 {
-	init_gray();
+	display_init_gray();
 	dclear(C_WHITE);
 	dprint(2, 2, C_BLACK, "HOW TO PLAY");
 	dline(2, 8, 41, 8, C_BLACK);
@@ -426,8 +475,7 @@ void display_help2()
 	dprint(1, 32, C_BLACK, "*HIT THE INDICATED # OF TARGETS,");
 	dprint(5, 38, C_BLACK, "INCLUDING ALL REQUIRED TARGETS.");
 	dprint(1, 46, C_BLACK, "*USE EVERY TOKEN (BLOCK EXCEPTED).");
-	dimage(0, 55, &img_help2);
-	debug();
+	dimage(0, 55, (gint[HWCALC] == HWCALC_FXCG100) ? &img_help2_cg100 : &img_help2);
 	dupdate();
 }
 
@@ -440,4 +488,9 @@ void display_file_error(int rc, const char *op, const char *filename)
 	dprint(0, 8, C_BLACK, "%s", filename);
 	dprint(0, 28, C_BLACK, "Press any key to exit");
 	dupdate();
+}
+
+bool display_is_using_gray_engine(void)
+{
+	return display_is_gray;
 }

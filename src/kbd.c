@@ -1,6 +1,6 @@
 /*
 Laser Logic
-Copyright (C) 2022  Jeffry Johnston
+Copyright (C) 2022, 2025  Jeffry Johnston
 
 This file is part of Laser Logic.
 
@@ -18,24 +18,42 @@ You should have received a copy of the GNU General Public License
 along with Laser Logic.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <gint/display.h>
+#include <gint/gint.h>
 #include <gint/hardware.h>
 #include <gint/keyboard.h>
+#ifndef FX9860G_G3A
 #include <gint/usb-ff-bulk.h>
 #include <gint/drivers/t6k11.h>
+#endif
 #include "kbd.h"
+#include "display.h"
 
 #define KEY_REDRAW -1
+#define KEY_NONE -2
 
-extern int display_debug;
-extern unsigned int light;
-extern unsigned int dark;
+extern uint8_t debug_display;
+#ifdef FX9860G_G3A
+extern uint8_t debug_r;
+extern uint8_t debug_g;
+extern uint8_t debug_b;
+#else
+extern uint16_t debug_light;
+extern uint16_t debug_dark;
+#endif
+
+bool ignore_keypress;
 
 void kbd_init(void)
 {
+#ifndef FX9860G_G3A
 	usb_interface_t const *interfaces[] = { &usb_ff_bulk, NULL };
 	usb_open(interfaces, GINT_CALL_NULL);
+	ignore_keypress = false;
+#endif
 }
 
+#ifndef FX9860G_G3A
 /*
 How to take an in-game screenshot:
 1. Run: fxlink -iw
@@ -44,80 +62,99 @@ How to take an in-game screenshot:
 */
 static void take_screenshot(void)
 {
-	if (usb_is_open())
-		usb_fxlink_screenshot_gray(1);
+	if (usb_is_open()) {
+		if (display_is_using_gray_engine())
+			usb_fxlink_screenshot_gray(1);
+		else
+			usb_fxlink_screenshot(1);
+	}
 }
-
-static void Power_Off(void)
-{
-	asm volatile(
-		"\n	mov	#1,r4"
-		"\n	mov.l	poweroff_%=,r0"
-		"\n	mov.l	syscall_%=,r2"
-		"\n	jmp	@r2"
-		"\n	nop"
-		"\n	.align 4"
-		"\npoweroff_%=:"
-		"\n	.long	0x3F4"
-		"\nsyscall_%=:"
-		"\n	.long	0x80010070"
-		:
-	);
-}
-
-static void power_off(void)
-{
-	gint_world_switch((gint_call_t) {
-		.function = (void *)Power_Off,
-		.args = {}
-	});
-}
+#endif
 
 static unsigned int kbd_getkey(void)
 {
 	key_event_t event = getkey_opt(GETKEY_BACKLIGHT, NULL);
+	if (ignore_keypress) {
+		ignore_keypress = false;
+		return KEY_NONE;
+	}
+
 	uint key = event.key;
 	switch (key) {
+#ifndef FX9860G_G3A
 	case KEY_7:
 		take_screenshot();
 		break;
+#endif
 	case KEY_ACON:
-		power_off();
-		return KEY_REDRAW;
+		gint_poweroff(true);
+#ifdef FX9860G_G3A
+		dupdate();
+#endif
+		break;
 	case KEY_COMMA:
-		display_debug = 1 - display_debug;
+		debug_display = 1 - debug_display;
 		return KEY_REDRAW;
+#ifndef FX9860G_G3A
 	case KEY_OPTN:
 		if (!isSlim())
 			t6k11_backlight(-1);
 		break;
+#endif
 	}
-	if (display_debug)
+	if (debug_display)
 		switch (key) {
-		case KEY_8:
-			light += 10;
-			return KEY_REDRAW;
-		case KEY_5:
-			++light;
+#ifdef FX9860G_G3A
+		case KEY_1:
+			if (debug_r < 31)
+				++debug_r;
 			return KEY_REDRAW;
 		case KEY_2:
-			--light;
-			return KEY_REDRAW;
-		case KEY_DOT:
-			light -= 10;
-			return KEY_REDRAW;
-		case KEY_9:
-			dark += 10;
-			return KEY_REDRAW;
-		case KEY_6:
-			++dark;
+			if (debug_g < 63)
+				++debug_g;
 			return KEY_REDRAW;
 		case KEY_3:
-			--dark;
+			if (debug_b < 31)
+				++debug_b;
+			return KEY_REDRAW;
+		case KEY_0:
+			if (debug_r > 0)
+				--debug_r;
+			return KEY_REDRAW;
+		case KEY_DOT:
+			if (debug_g > 0)
+				--debug_g;
 			return KEY_REDRAW;
 		case KEY_EXP:
-			dark -= 10;
+			if (debug_b > 0)
+				--debug_b;
 			return KEY_REDRAW;
+#else
+		case KEY_8:
+			debug_light += 10;
+			return KEY_REDRAW;
+		case KEY_5:
+			++debug_light;
+			return KEY_REDRAW;
+		case KEY_2:
+			--debug_light;
+			return KEY_REDRAW;
+		case KEY_DOT:
+			debug_light -= 10;
+			return KEY_REDRAW;
+		case KEY_9:
+			debug_dark += 10;
+			return KEY_REDRAW;
+		case KEY_6:
+			++debug_dark;
+			return KEY_REDRAW;
+		case KEY_3:
+			--debug_dark;
+			return KEY_REDRAW;
+		case KEY_EXP:
+			debug_dark -= 10;
+			return KEY_REDRAW;
+#endif
 		}
 	return key;
 }
@@ -129,6 +166,14 @@ command_t kbd_game(void)
 		case KEY_REDRAW:
 			return COMMAND_REDRAW;
 		case KEY_MENU:
+#ifndef FX9860G_G3A
+			display_menu_return();
+			ignore_keypress = true;
+#endif
+			gint_osmenu();
+#ifdef FX9860G_G3A
+			dupdate();
+#endif
 			return COMMAND_OSMENU;
 		case KEY_UP:
 			return COMMAND_CURSOR_UP;
@@ -146,11 +191,27 @@ command_t kbd_game(void)
 			return COMMAND_CANCEL;
 		case KEY_F1:
 		case KEY_HELP:
-			return COMMAND_HELP;
+			if (gint[HWCALC] != HWCALC_FXCG100)
+				return COMMAND_HELP;
+			break;
+		case KEY_SETTINGS:
+			if (gint[HWCALC] == HWCALC_FXCG100)
+				return COMMAND_HELP;
+			break;
+		case KEY_F3:
+			if (gint[HWCALC] == HWCALC_FXCG100)
+				return COMMAND_ROTATE_CCW;
+			break;
 		case KEY_F5:
-			return COMMAND_ROTATE_CCW;
+			if (gint[HWCALC] != HWCALC_FXCG100)
+				return COMMAND_ROTATE_CCW;
+			else
+				return COMMAND_ROTATE_CW;
+			break;
 		case KEY_F6:
-			return COMMAND_ROTATE_CW;
+			if (gint[HWCALC] != HWCALC_FXCG100)
+				return COMMAND_ROTATE_CW;
+			break;
 		case KEY_ADD:
 		case KEY_RIGHTP:
 			return COMMAND_PUZZLE_NEXT;
@@ -171,7 +232,13 @@ command_t kbd_help(void)
 			return COMMAND_CANCEL;
 		case KEY_F1:
 		case KEY_HELP:
-			return COMMAND_HELP;
+			if (gint[HWCALC] != HWCALC_FXCG100)
+				return COMMAND_HELP;
+			break;
+		case KEY_SETTINGS:
+			if (gint[HWCALC] == HWCALC_FXCG100)
+				return COMMAND_HELP;
+			break;
 		}
 	}
 }
