@@ -191,27 +191,14 @@ command_t kbd_game(void)
 			return COMMAND_CANCEL;
 		case KEY_F1:
 		case KEY_HELP:
-			if (gint[HWCALC] != HWCALC_FXCG100)
-				return COMMAND_HELP;
-			break;
 		case KEY_SETTINGS:
-			if (gint[HWCALC] == HWCALC_FXCG100)
-				return COMMAND_HELP;
-			break;
-		case KEY_F3:
-			if (gint[HWCALC] == HWCALC_FXCG100)
-				return COMMAND_ROTATE_CCW;
-			break;
+			return COMMAND_HELP;
 		case KEY_F5:
-			if (gint[HWCALC] != HWCALC_FXCG100)
-				return COMMAND_ROTATE_CCW;
-			else
-				return COMMAND_ROTATE_CW;
-			break;
+		case KEY_PREVTAB:
+			return COMMAND_ROTATE_CCW;
 		case KEY_F6:
-			if (gint[HWCALC] != HWCALC_FXCG100)
-				return COMMAND_ROTATE_CW;
-			break;
+		case KEY_NEXTTAB:
+			return COMMAND_ROTATE_CW;
 		case KEY_ADD:
 		case KEY_RIGHTP:
 			return COMMAND_PUZZLE_NEXT;
@@ -232,13 +219,8 @@ command_t kbd_help(void)
 			return COMMAND_CANCEL;
 		case KEY_F1:
 		case KEY_HELP:
-			if (gint[HWCALC] != HWCALC_FXCG100)
-				return COMMAND_HELP;
-			break;
 		case KEY_SETTINGS:
-			if (gint[HWCALC] == HWCALC_FXCG100)
-				return COMMAND_HELP;
-			break;
+			return COMMAND_HELP;
 		}
 	}
 }
